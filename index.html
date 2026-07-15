@@ -28,42 +28,47 @@
 }
 .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
-/* ── top bar ── */
+/* ── top bar（1段目：イベント名・日付・わたし／2段目：大時計・大ステータス） ── */
 .top{
-  display:flex;align-items:center;gap:1.2em;flex-wrap:wrap;
-  padding:.7em 1.1em;background:var(--navy);color:#fff;
+  display:flex;flex-direction:column;gap:.45em;
+  padding:.55em 1.1em .7em;background:var(--navy);color:#fff;
 }
-.top h1{font-size:1.15em;font-weight:700;letter-spacing:.02em}
+.toprow1{display:flex;align-items:center;gap:.6em;min-width:0}
 .evname{
   background:transparent;border:0;border-bottom:1px dashed rgba(255,255,255,.45);
-  color:#fff;font:inherit;font-weight:700;font-size:1.15em;padding:.1em .2em;min-width:14em;
+  color:#fff;font:inherit;font-weight:700;font-size:.9em;padding:.1em .2em;
+  flex:1;min-width:3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .evname:focus{outline:2px solid var(--signal);outline-offset:2px;border-bottom-color:transparent}
-.daytabs{display:flex;gap:.3em;margin-left:auto}
+.daytabs{display:flex;gap:.3em}
 .daytab{
-  background:rgba(255,255,255,.12);border:0;color:#fff;font:inherit;font-weight:600;
-  padding:.35em .9em;border-radius:2px;cursor:pointer;
+  background:rgba(255,255,255,.12);border:0;color:#fff;font:inherit;font-weight:600;font-size:.85em;
+  padding:.3em .7em;border-radius:2px;cursor:pointer;white-space:nowrap;
 }
 .daytab[aria-pressed="true"]{background:#fff;color:var(--navy)}
 .daytab:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
-.clock{font-size:1.7em;font-weight:600;letter-spacing:.02em}
+.toprow2{display:flex;align-items:center;gap:1em}
+.clockbox{flex:0 0 auto}
+.clock{font-size:2.3em;font-weight:600;letter-spacing:.02em;line-height:1.05}
 
-/* ── 担当者モード ── */
-.me{display:flex;flex-direction:column;gap:.3em;min-width:12em}
-.mechips{display:flex;gap:.3em;align-items:center}
+/* ── 担当者モード（チップは1段目右・ステータスは2段目ヒーロー） ── */
+.mechips{display:flex;gap:.3em;align-items:center;margin-left:auto;flex:0 0 auto}
 .mechips .eyebrow{color:rgba(255,255,255,.7)}
 .mechip{
-  width:2em;height:2em;border-radius:50%;border:1px solid rgba(255,255,255,.45);
-  background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer;line-height:1;
+  width:1.9em;height:1.9em;border-radius:50%;border:1px solid rgba(255,255,255,.45);
+  background:transparent;color:#fff;font:inherit;font-weight:600;font-size:.9em;cursor:pointer;line-height:1;
 }
 .mechip[aria-pressed="true"]{background:#fff;color:var(--navy);border-color:#fff}
 .mechip:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
-.mestat{font-size:.85em;line-height:1.35}
-.mestat b{font-size:1.5em;font-weight:700}
+.mestat{flex:1;min-width:0;text-align:right;font-size:.95em;line-height:1.25}
+.mestat b{font-size:2.4em;font-weight:700;vertical-align:-.08em;letter-spacing:-.02em}
 .mestat .tag{
-  display:inline-block;font-size:.8em;font-weight:600;letter-spacing:.06em;
-  padding:.1em .5em;border-radius:2px;background:rgba(255,255,255,.18);margin-right:.4em;vertical-align:.15em;
+  display:block;width:fit-content;margin:0 0 .15em auto;
+  font-size:.78em;font-weight:600;letter-spacing:.06em;
+  padding:.1em .55em;border-radius:2px;background:rgba(255,255,255,.18);
 }
+.mestat .sub{font-size:.8em;color:rgba(255,255,255,.75)}
+.mestat .hint{font-size:.85em;color:rgba(255,255,255,.65)}
 .mestat.onbreak .tag{background:#fff;color:var(--navy)}
 .mestat.warn .tag{background:var(--signal);color:#fff}
 .mestat.warn b{color:#FFD9CC}
@@ -97,8 +102,17 @@
 .wrow .mono{font-weight:600}
 .next{display:flex;gap:.6em;align-items:baseline;margin-top:.6em;padding-top:.6em;border-top:1px solid var(--line);font-size:.85em}
 .next b{font-size:1.15em}
+.nowlegend{display:flex;gap:.9em;margin-top:.6em;padding-top:.5em;border-top:1px solid var(--line);font-size:.72em;color:var(--mute)}
+.nowlegend .lg{display:flex;gap:.3em;align-items:center}
+.nowlegend .lg i{height:.8em;border-radius:1px;display:block}
 
-.members{background:var(--card);border-radius:3px;padding:.8em;flex:1;min-height:0;display:flex;flex-direction:column}
+.members{background:var(--card);border-radius:3px;padding:.8em}
+.members summary{cursor:pointer;list-style:none;display:flex;gap:.6em;align-items:baseline;min-width:0}
+.members summary::-webkit-details-marker{display:none}
+.members summary::after{content:"▸";margin-left:auto;color:var(--mute);font-size:.8em}
+.members[open] summary::after{content:"▾"}
+.memsum{font-size:.85em;color:#5A6B7C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.members[open] #mlist{margin-top:.4em}
 .mrow{display:grid;grid-template-columns:1.9em 1fr auto;align-items:center;gap:.5em;padding:.32em 0;border-bottom:1px solid #EEF1F4}
 .mrow:last-child{border-bottom:0}
 .role{font-weight:600;color:var(--navy);text-align:center}
@@ -174,20 +188,24 @@
 .lg i{height:.8em;border-radius:1px;display:block}
 .msg{color:var(--signal);font-weight:600}
 input[type=time].sim{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font:inherit;border-radius:2px;padding:.25em}
+/* スマホではフッター（編集・書き出し・仮時刻）を隠す。運用系操作はPCで行う */
+@media (max-width:700px){.bot{display:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
 <div id="app">
   <div class="top">
-    <h1><input class="evname" id="evname" aria-label="イベント名"></h1>
-    <div class="daytabs" id="daytabs"></div>
-    <div>
-      <div class="live"><span class="dot"></span><span id="livelbl">LIVE</span></div>
-      <div class="clock mono" id="clock">--:--</div>
-    </div>
-    <div class="me">
+    <div class="toprow1">
+      <input class="evname" id="evname" aria-label="イベント名">
+      <div class="daytabs" id="daytabs"></div>
       <div class="mechips" id="mechips"><span class="eyebrow">わたし</span></div>
-      <div class="mestat" id="mestat" hidden></div>
+    </div>
+    <div class="toprow2">
+      <div class="clockbox">
+        <div class="live"><span class="dot"></span><span id="livelbl">LIVE</span></div>
+        <div class="clock mono" id="clock">--:--</div>
+      </div>
+      <div class="mestat" id="mestat"></div>
     </div>
   </div>
 
@@ -200,14 +218,20 @@ input[type=time].sim{background:rgba(255,255,255,.1);border:1px solid rgba(255,2
         <div class="nowctx" id="nowctx"></div>
         <div class="nownote" id="nownote" hidden></div>
         <div class="nowwho" id="nowwho" hidden></div>
+        <div class="nowlegend">
+          <span class="lg"><i style="width:4px;background:var(--c-idle)"></i>最閑散</span>
+          <span class="lg"><i style="width:9px;background:var(--c-quiet)"></i>閑散</span>
+          <span class="lg"><i style="width:17px;background:var(--c-busy)"></i>混雑</span>
+          <span class="lg"><i style="width:26px;background:var(--c-peak)"></i>ピーク</span>
+        </div>
         <div class="next"><span class="eyebrow">つぎ</span><b class="mono" id="nextt">—</b><span id="nextl"></span></div>
       </div>
 
-      <div class="members">
-        <div class="eyebrow">メンバー登録（名前を入れると全画面に反映されます）</div>
+      <details class="members" id="mem" open>
+        <summary><span class="eyebrow">メンバー登録</span><span class="memsum" id="memsum"></span></summary>
         <div id="mlist"></div>
         <div class="tot" id="tot"></div>
-      </div>
+      </details>
     </div>
 
     <div class="run" id="run">
@@ -230,12 +254,6 @@ input[type=time].sim{background:rgba(255,255,255,.1);border:1px solid rgba(255,2
     <label style="display:flex;gap:.4em;align-items:center">時刻を仮設定<input type="time" class="sim" id="sim"></label>
     <button class="btn" id="simoff" hidden>実時刻に戻す</button>
     <span class="msg" id="msg"></span>
-    <div class="legend">
-      <span class="lg"><i style="width:4px;background:var(--c-idle)"></i>最閑散</span>
-      <span class="lg"><i style="width:9px;background:var(--c-quiet)"></i>閑散</span>
-      <span class="lg"><i style="width:17px;background:var(--c-busy)"></i>混雑</span>
-      <span class="lg"><i style="width:26px;background:var(--c-peak)"></i>ピーク</span>
-    </div>
   </div>
 </div>
 
@@ -395,6 +413,8 @@ function renderMembers(){
   });
   const mins=ROLE.slice(0,actN()).map((_,i)=>day().rows.filter(r=>r.b.includes(i)).reduce((a,r)=>a+toMin(r.e)-toMin(r.s),0));
   $('tot').textContent='本日の休憩合計 → '+mins.map((m,i)=>ROLE[i]+' '+m+'分').join('　');
+  const names=ROLE.slice(0,actN()).map((_,i)=>ev().members[day().order[i]]).filter(s=>s&&s.trim());
+  $('memsum').textContent=names.length?names.join('・'):'名前を入れると全画面に反映されます';
   updateStates();
 }
 function renderMeChips(){
@@ -425,15 +445,15 @@ function roleLeft(i,n){
   return{off,left:(last?toMin(rows[j].e):toMin(rows[k].s))-n,until:last?null:rows[k].s};
 }
 
-/* 自分視点の残り時間。連続する同状態の行はまたいで合算する */
+/* 自分視点の残り時間（ヘッダーのヒーロー表示）。連続する同状態の行はまたいで合算する */
 function myStat(){
   const el=$('mestat');
-  if(me===null||me>=actN()){el.hidden=true;return;}
-  el.hidden=false;el.className='mestat';
+  el.className='mestat';
+  if(me===null||me>=actN()){el.innerHTML='<span class="hint">右上の番号で「わたし」を選ぶと、自分の残り時間がここに出ます</span>';return;}
   const rows=day().rows,n=nowMin();
   const ix=rows.findIndex(r=>n>=toMin(r.s)&&n<toMin(r.e));
   const who=nameOf(me);
-  if(ix<0){el.innerHTML=`<span class="tag">${esc(who)}</span>運営時間外`;return;}
+  if(ix<0){el.innerHTML=`<span class="tag">${esc(who)}</span><span class="sub">運営時間外</span>`;return;}
   const off=rows[ix].b.includes(me);
   let j=ix;
   while(j+1<rows.length&&toMin(rows[j+1].s)===toMin(rows[j].e)&&rows[j+1].b.includes(me)===off)j++;
@@ -442,23 +462,23 @@ function myStat(){
     const left=end-n;
     if(left<=5){
       el.classList.add('warn');
-      el.innerHTML=`<span class="tag">${esc(who)}｜スタンバイ</span>ブース脇へ移動。<b class="mono">${rows[j].e}</b>交代（波が早く来たら即入り）`;
+      el.innerHTML=`<span class="tag">${esc(who)}｜スタンバイ</span><b>ブース脇へ</b><div class="sub">${rows[j].e}交代。波が早く来たら即入り</div>`;
     }else{
       el.classList.add('onbreak');
-      el.innerHTML=`<span class="tag">${esc(who)}｜休憩中</span>あと<b class="mono">${left-5}</b>分（${fmt(end-5)}からブース脇スタンバイ）`;
+      el.innerHTML=`<span class="tag">${esc(who)}｜休憩中</span>あと<b class="mono">${left-5}</b>分<div class="sub">${fmt(end-5)}からブース脇スタンバイ</div>`;
     }
     return;
   }
   let k=j+1;
   while(k<rows.length&&!rows[k].b.includes(me))k++;
   if(k>=rows.length){
-    el.innerHTML=`<span class="tag">${esc(who)}｜対応中</span>あと<b class="mono">${end-n}</b>分で本日終了（休憩は消化済み）`;
+    el.innerHTML=`<span class="tag">${esc(who)}｜対応中</span>あと<b class="mono">${end-n}</b>分<div class="sub">本日終了まで（休憩は消化済み）</div>`;
     return;
   }
   let m=k;
   while(m+1<rows.length&&toMin(rows[m+1].s)===toMin(rows[m].e)&&rows[m+1].b.includes(me))m++;
   const bs=toMin(rows[k].s),blen=toMin(rows[m].e)-bs;
-  el.innerHTML=`<span class="tag">${esc(who)}｜対応中</span>次の休憩まであと<b class="mono">${bs-n}</b>分（${rows[k].s}から${blen}分）`;
+  el.innerHTML=`<span class="tag">${esc(who)}｜対応中</span>休憩まで<b class="mono">${bs-n}</b>分<div class="sub">${rows[k].s}から${blen}分休憩</div>`;
 }
 
 function updateStates(){
@@ -599,5 +619,8 @@ $('sim').onchange=e=>{if(!e.target.value){simMin=null;$('simoff').hidden=true;re
 $('simoff').onclick=()=>{simMin=null;$('sim').value='';$('simoff').hidden=true;render();scrollToNow();};
 
 setInterval(()=>{if(!editing){updateStates();renderRows();}tick();},1000);
-load();setTimeout(scrollToNow,300);
+load();
+/* 名前が入っていればメンバー欄は初期折りたたみ（開閉はロード時のみ判定） */
+if(ROLE.slice(0,actN()).some((_,i)=>{const m=ev().members[day().order[i]];return m&&m.trim();}))$('mem').open=false;
+setTimeout(scrollToNow,300);
 </script>
