@@ -47,6 +47,26 @@
 .daytab[aria-pressed="true"]{background:#fff;color:var(--navy)}
 .daytab:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
 .clock{font-size:1.7em;font-weight:600;letter-spacing:.02em}
+
+/* ── 担当者モード ── */
+.me{display:flex;flex-direction:column;gap:.3em;min-width:12em}
+.mechips{display:flex;gap:.3em;align-items:center}
+.mechips .eyebrow{color:rgba(255,255,255,.7)}
+.mechip{
+  width:2em;height:2em;border-radius:50%;border:1px solid rgba(255,255,255,.45);
+  background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer;line-height:1;
+}
+.mechip[aria-pressed="true"]{background:#fff;color:var(--navy);border-color:#fff}
+.mechip:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.mestat{font-size:.85em;line-height:1.35}
+.mestat b{font-size:1.5em;font-weight:700}
+.mestat .tag{
+  display:inline-block;font-size:.8em;font-weight:600;letter-spacing:.06em;
+  padding:.1em .5em;border-radius:2px;background:rgba(255,255,255,.18);margin-right:.4em;vertical-align:.15em;
+}
+.mestat.onbreak .tag{background:#fff;color:var(--navy)}
+.mestat.warn .tag{background:var(--signal);color:#fff}
+.mestat.warn b{color:#FFD9CC}
 .live{display:flex;align-items:center;gap:.4em;font-size:.75em;letter-spacing:.08em;font-weight:600}
 .dot{width:.6em;height:.6em;border-radius:50%;background:var(--signal);animation:pulse 2s infinite}
 @keyframes pulse{50%{opacity:.25}}
@@ -156,6 +176,10 @@ input[type=time].sim{background:rgba(255,255,255,.1);border:1px solid rgba(255,2
     <div>
       <div class="live"><span class="dot"></span><span id="livelbl">LIVE</span></div>
       <div class="clock mono" id="clock">--:--</div>
+    </div>
+    <div class="me">
+      <div class="mechips" id="mechips"><span class="eyebrow">わたし</span></div>
+      <div class="mestat" id="mestat" hidden></div>
     </div>
   </div>
 
@@ -275,6 +299,14 @@ const SEED={
 };
 
 let S=JSON.parse(JSON.stringify(SEED)), dayIx=0, editing=false, simMin=null;
+/* 担当者モード：自分の役割番号。端末ごとに保存（共有データには含めない） */
+let me=null;
+try{const v=localStorage.getItem(KEY+'-me');if(v!==null&&v!=='')me=+v;}catch(e){}
+function setMe(i){
+  me=(me===i)?null:i;
+  try{me===null?localStorage.removeItem(KEY+'-me'):localStorage.setItem(KEY+'-me',me);}catch(e){}
+  renderMeChips();tick();
+}
 const $=id=>document.getElementById(id);
 const ev=()=>S.events.find(e=>e.id===S.activeId)||S.events[0];
 const day=()=>ev().days[Math.min(dayIx,ev().days.length-1)];
@@ -308,7 +340,7 @@ function render(){
   });
   const sel=$('evsel');sel.innerHTML='';
   S.events.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.name;o.selected=e.id===S.activeId;sel.appendChild(o);});
-  renderMembers();renderRows();tick();
+  renderMeChips();renderMembers();renderRows();tick();
 }
 
 /* DOMは切り替え時のみ構築。毎秒の更新は updateStates() でバッジだけ触る
@@ -332,6 +364,50 @@ function renderMembers(){
   $('tot').textContent='本日の休憩合計 → '+mins.map((m,i)=>ROLE[i]+' '+m+'分').join('　');
   updateStates();
 }
+function renderMeChips(){
+  const box=$('mechips');
+  box.innerHTML='<span class="eyebrow">わたし</span>';
+  ROLE.forEach((rl,i)=>{
+    const b=document.createElement('button');
+    b.className='mechip';b.textContent=rl;
+    b.setAttribute('aria-pressed',me===i);
+    b.setAttribute('aria-label',`役割${rl}を自分として表示（もう一度押すと解除）`);
+    b.onclick=()=>setMe(i);
+    box.appendChild(b);
+  });
+}
+
+/* 自分視点の残り時間。連続する同状態の行はまたいで合算する */
+function myStat(){
+  const el=$('mestat');
+  if(me===null){el.hidden=true;return;}
+  el.hidden=false;el.className='mestat';
+  const rows=day().rows,n=nowMin();
+  const ix=rows.findIndex(r=>n>=toMin(r.s)&&n<toMin(r.e));
+  const who=nameOf(me);
+  if(ix<0){el.innerHTML=`<span class="tag">${esc(who)}</span>運営時間外`;return;}
+  const off=rows[ix].b.includes(me);
+  let j=ix;
+  while(j+1<rows.length&&toMin(rows[j+1].s)===toMin(rows[j].e)&&rows[j+1].b.includes(me)===off)j++;
+  const end=toMin(rows[j].e);
+  if(off){
+    const left=end-n;
+    if(left<=5)el.classList.add('warn');else el.classList.add('onbreak');
+    el.innerHTML=`<span class="tag">${esc(who)}｜休憩中</span>あと<b class="mono">${left}</b>分（${rows[j].e}までにブースへ）`;
+    return;
+  }
+  let k=j+1;
+  while(k<rows.length&&!rows[k].b.includes(me))k++;
+  if(k>=rows.length){
+    el.innerHTML=`<span class="tag">${esc(who)}｜対応中</span>あと<b class="mono">${end-n}</b>分で本日終了（休憩は消化済み）`;
+    return;
+  }
+  let m=k;
+  while(m+1<rows.length&&toMin(rows[m+1].s)===toMin(rows[m].e)&&rows[m+1].b.includes(me))m++;
+  const bs=toMin(rows[k].s),blen=toMin(rows[m].e)-bs;
+  el.innerHTML=`<span class="tag">${esc(who)}｜対応中</span>次の休憩まであと<b class="mono">${bs-n}</b>分（${rows[k].s}から${blen}分）`;
+}
+
 function updateStates(){
   const n=nowMin(),live=day().rows.find(r=>n>=toMin(r.s)&&n<toMin(r.e));
   document.querySelectorAll('.state').forEach(st=>{
@@ -398,6 +474,7 @@ function tick(){
   if(cur&&cur.n)$('nownote').textContent=cur.n;
   $('nextt').textContent=nx?nx.s:'—';
   $('nextl').textContent=nx?`${nx.t}（${CROWD[nx.c]}）まで あと${toMin(nx.s)-n}分`:'本日終了';
+  myStat();
 
   const line=$('nowline'),run=$('run');
   const el=[...document.querySelectorAll('.row')].find(x=>n>=+x.dataset.s&&n<+x.dataset.e);
