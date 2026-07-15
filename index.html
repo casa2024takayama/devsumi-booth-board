@@ -240,14 +240,43 @@ input[type=time].sim{background:rgba(255,255,255,.1);border:1px solid rgba(255,2
 </div>
 
 <script>
-const KEY='booth-ops-v2';
+const KEY='booth-ops-v3';
 const CROWD={ops:'設営・撤収',idle:'最閑散',quiet:'閑散',busy:'混雑',peak:'ピーク'};
 const ROLE=['①','②','③','④','⑤'];
 const R=(s,e,t,c,x,b,n)=>({s,e,t,c,x,b,n});
 
-/* ブースは最大4名。開場〜終了はつねに1人以上が小休憩に回る。
-   設営・撤収（開場時間外）のみ5名作業。 */
-function day1(){return[
+/* ブースは最大4名。
+   7/16（木）は4名体制：転換・ピークは全員在席、休憩はセッション中のみ（ブース3名）。
+   7/17（金）は5名体制：開場〜終了はつねに1人が小休憩に回る（4名＋交代1名）。 */
+function day16(){return[
+ R('09:45','10:00','設営','ops','',[],'配布物セット・QRの動作確認・カウンター初期化（4名作業）'),
+ R('10:00','10:50','開場・受付','quiet','早着の来場者がまばらに通過',[],'声かけの立ち位置をここで決めておく'),
+ R('10:50','11:00','オープニング','quiet','',[],''),
+ R('11:00','11:40','基調講演（40分）','idle','A・B・C・D 全会場／残席わずか',[0],'1日で最も静かな40分。役割①は昼休憩'),
+ R('11:40','11:55','転換','busy','',[],'全員在席。ここで一気に人が流れる'),
+ R('11:55','12:25','セッション','quiet','',[1],'役割②は昼休憩（30分）'),
+ R('12:25','12:40','転換','busy','',[],'全員在席'),
+ R('12:40','13:10','★軽食付セッション','idle','全会場で軽食を提供',[2],'来場者は会場内で食事。役割③は昼休憩'),
+ R('13:10','13:25','転換','busy','',[],'全員在席'),
+ R('13:25','13:55','セッション','quiet','',[3],'役割④は昼休憩（30分）'),
+ R('13:55','14:10','転換','busy','',[],'全員在席'),
+ R('14:10','14:25','セッション 前半','quiet','',[0],''),
+ R('14:25','14:40','セッション 後半','quiet','',[1],'14:35からブース脇スタンバイ'),
+ R('14:40','14:55','転換','busy','',[],'全員在席'),
+ R('14:55','15:10','セッション 前半','quiet','',[3],''),
+ R('15:10','15:25','セッション 後半','quiet','',[2],'15:20からブース脇スタンバイ'),
+ R('15:25','16:10','★リフレッシュタイム／スタンプラリー','peak','45分・全会場休止／抽選景品ありで来場者をブースへ誘導',[],'1日の最大ピーク。4名体制のため休憩なし・全員在席。QR導線を分散し立ち位置を広げる。D会場は15:40からクロージング講演のため流入は前半に寄る'),
+ R('16:10','16:25','セッション 前半','quiet','',[0],''),
+ R('16:25','16:40','セッション 後半','quiet','',[1],''),
+ R('16:40','16:55','転換','busy','',[],'全員在席'),
+ R('16:55','17:15','セッション（20分）','quiet','',[2],'役割③は20分休憩'),
+ R('17:15','17:30','転換','busy','',[],'全員在席'),
+ R('17:30','17:45','クロージング講演 前半','quiet','A・B・C会場',[3],'撤収準備はまだ始めない'),
+ R('17:45','18:00','クロージング講演 後半','quiet','',[],'全員在席。終了後に最後の波が来る'),
+ R('18:00','18:30','撤収','ops','',[],'在庫カウント・新規フォロー数の記録・その場で数値を共有')
+];}
+
+function base5(){return[
  R('09:45','10:00','設営','ops','',[],'配布物セット・QRの動作確認・カウンター初期化（開場前なので5名作業）'),
  R('10:00','10:25','開場・受付 前半','quiet','早着の来場者がまばらに通過',[3],'声かけの立ち位置をここで決めておく'),
  R('10:25','10:50','開場・受付 後半','quiet','',[2],''),
@@ -279,7 +308,7 @@ function day1(){return[
  R('18:00','18:30','撤収','ops','',[],'在庫カウント・新規フォロー数の記録・その場で数値を共有（5名作業）')
 ];}
 
-function day2(){const d=day1();
+function day17(){const d=base5();
  const at=s=>d.find(r=>r.s===s);
  at('11:00').x='A・B・C 全会場／残席わずか';
  at('14:55').c='busy'; at('14:55').x='B・C会場はclose／A会場のみ稼働';
@@ -302,8 +331,10 @@ const SEED={
    id:'devsumi-summer-2026',
    name:'Developers Summit 2026 Summer',
    members:['','','','',''],
-   days:[{label:'7/16（木）',order:[0,1,2,3,4],rows:day1()},
-         {label:'7/17（金）',order:[4,0,1,2,3],rows:day2()}]
+   /* members[0..3]=木曜の①〜④（[3]=責任者）、members[4]=金曜合流。
+      金曜は繰り下げ：木④→金①、木①→金②、木②→金③、木③→金④、合流者→金⑤ */
+   days:[{label:'7/16（木）',active:4,order:[0,1,2,3,4],rows:day16()},
+         {label:'7/17（金）',active:5,order:[3,0,1,2,4],rows:day17()}]
  }]
 };
 
@@ -319,6 +350,7 @@ function setMe(i){
 const $=id=>document.getElementById(id);
 const ev=()=>S.events.find(e=>e.id===S.activeId)||S.events[0];
 const day=()=>ev().days[Math.min(dayIx,ev().days.length-1)];
+const actN=()=>day().active||5;   /* その日の稼働人数（役割①〜actN） */
 const toMin=t=>{const[a,b]=t.split(':').map(Number);return a*60+b};
 const nowMin=()=>{if(simMin!==null)return simMin;const d=new Date();return d.getHours()*60+d.getMinutes()};
 const pad=n=>String(n).padStart(2,'0');
@@ -356,7 +388,7 @@ function render(){
    （入力中にinputを作り直すとフォーカスとIME変換が壊れるため） */
 function renderMembers(){
   const L=$('mlist');L.innerHTML='';
-  ROLE.forEach((rl,i)=>{
+  ROLE.slice(0,actN()).forEach((rl,i)=>{
     const mi=day().order[i];
     const row=document.createElement('div');row.className='mrow';
     row.innerHTML=`<span class="role">${rl}</span>`;
@@ -369,14 +401,14 @@ function renderMembers(){
     st.className='state';st.dataset.role=i;
     row.appendChild(st);L.appendChild(row);
   });
-  const mins=ROLE.map((_,i)=>day().rows.filter(r=>r.b.includes(i)).reduce((a,r)=>a+toMin(r.e)-toMin(r.s),0));
+  const mins=ROLE.slice(0,actN()).map((_,i)=>day().rows.filter(r=>r.b.includes(i)).reduce((a,r)=>a+toMin(r.e)-toMin(r.s),0));
   $('tot').textContent='本日の休憩合計 → '+mins.map((m,i)=>ROLE[i]+' '+m+'分').join('　');
   updateStates();
 }
 function renderMeChips(){
   const box=$('mechips');
   box.innerHTML='<span class="eyebrow">わたし</span>';
-  ROLE.forEach((rl,i)=>{
+  ROLE.slice(0,actN()).forEach((rl,i)=>{
     const b=document.createElement('button');
     b.className='mechip';b.textContent=rl;
     b.setAttribute('aria-pressed',me===i);
@@ -404,7 +436,7 @@ function roleLeft(i,n){
 /* 自分視点の残り時間。連続する同状態の行はまたいで合算する */
 function myStat(){
   const el=$('mestat');
-  if(me===null){el.hidden=true;return;}
+  if(me===null||me>=actN()){el.hidden=true;return;}
   el.hidden=false;el.className='mestat';
   const rows=day().rows,n=nowMin();
   const ix=rows.findIndex(r=>n>=toMin(r.s)&&n<toMin(r.e));
@@ -470,14 +502,14 @@ function renderRows(){
         <span class="mono time">${r.s}<span class="dur">${e-s}分</span></span>
         <span><span class="title">${r.c==='peak'?'<span class="badge">最重要</span>':''}${esc(r.t)}</span>${r.x?`<div class="ctx">${esc(r.x)}</div>`:''}</span>
         <span class="note">${esc(r.n||'')}</span>
-        <span class="brk">${who}<div class="cnt">ブース ${5-r.b.length}名</div></span>`;
+        <span class="brk">${who}<div class="cnt">ブース ${actN()-r.b.length}名</div></span>`;
     }else{
       el.innerHTML=`
         <span class="ribbon" data-c="${r.c}"></span>
         <span><input class="ed mono" data-f="s" value="${r.s}"><input class="ed mono" data-f="e" value="${r.e}" style="margin-top:.2em"></span>
         <span><input class="ed" data-f="t" value="${esc(r.t)}"><input class="ed" data-f="x" value="${esc(r.x||'')}" placeholder="会場の状況" style="margin-top:.2em">${crowdSel(r.c,true)}</span>
         <span><input class="ed" data-f="n" value="${esc(r.n||'')}" placeholder="スタッフ向けメモ"></span>
-        <span><div class="chk">${ROLE.map((rl,i)=>`<label><input type="checkbox" data-b="${i}" ${r.b.includes(i)?'checked':''}>${rl}</label>`).join('')}</div>
+        <span><div class="chk">${ROLE.slice(0,actN()).map((rl,i)=>`<label><input type="checkbox" data-b="${i}" ${r.b.includes(i)?'checked':''}>${rl}</label>`).join('')}</div>
         <button class="del" data-del="1" style="margin-top:.3em">この行を削除</button></span>`;
       el.querySelectorAll('[data-f]').forEach(f=>f.onchange=ee=>{r[ee.target.dataset.f]=ee.target.value;save();render();});
       el.querySelectorAll('[data-b]').forEach(f=>f.onchange=ee=>{
@@ -510,7 +542,7 @@ function tick(){
   const who=$('nowwho');
   if(cur){
     const on=[],offs=[],stbys=[];
-    ROLE.forEach((_,i)=>{const st=roleLeft(i,n);if(!st)return;
+    ROLE.slice(0,actN()).forEach((_,i)=>{const st=roleLeft(i,n);if(!st)return;
       const nm=esc(nameOf(i));
       if(st.off&&st.left<=5)stbys.push(`<b>${nm}</b>（${st.until}交代）`);
       else if(st.off)offs.push(`<b>${nm}</b> あと<span class="mono">${st.left-5}</span>分`);
@@ -544,7 +576,8 @@ $('editbtn').onclick=()=>{editing=!editing;$('editbtn').textContent=editing?'編
   document.getElementById('app').classList.toggle('edit',editing);render();};
 $('addbtn').onclick=()=>{const l=day().rows[day().rows.length-1];
   day().rows.push(R(l?l.e:'10:00',l?l.e:'10:15','新しい行','quiet','',[],''));save();render();};
-$('rotbtn').onclick=()=>{const o=day().order;day().order=[o[4],o[0],o[1],o[2],o[3]];save();render();
+$('rotbtn').onclick=()=>{const a=actN(),o=day().order;
+  day().order=[o[a-1],...o.slice(0,a-1),...o.slice(a)];save();render();
   flash('担当を1つずらしました');};
 $('newbtn').onclick=()=>{
   const name=prompt('イベント名を入力してください（例：Developers Summit KANSAI 2026）');
