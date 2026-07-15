@@ -88,6 +88,13 @@
 .nowtitle{font-weight:600}
 .nowctx{font-size:.85em;color:#5A6B7C;margin-top:.15em}
 .nownote{margin-top:.5em;font-size:.85em;background:#FFF4EE;border-left:3px solid var(--signal);padding:.45em .6em}
+.nowwho{margin-top:.6em;padding-top:.6em;border-top:1px solid var(--line);font-size:.85em;display:flex;flex-direction:column;gap:.3em}
+.wrow{display:flex;gap:.6em;align-items:baseline}
+.wlab{flex:0 0 7.5em;font-size:.8em;letter-spacing:.08em;color:var(--mute);font-weight:600}
+.wrow span:last-child{flex:1;min-width:0}
+.wrow.off .wlab{color:#C43A08}
+.wrow b{font-weight:600}
+.wrow .mono{font-weight:600}
 .next{display:flex;gap:.6em;align-items:baseline;margin-top:.6em;padding-top:.6em;border-top:1px solid var(--line);font-size:.85em}
 .next b{font-size:1.15em}
 
@@ -191,6 +198,7 @@ input[type=time].sim{background:rgba(255,255,255,.1);border:1px solid rgba(255,2
         <div class="nowtitle" id="nowtitle">—</div>
         <div class="nowctx" id="nowctx"></div>
         <div class="nownote" id="nownote" hidden></div>
+        <div class="nowwho" id="nowwho" hidden></div>
         <div class="next"><span class="eyebrow">つぎ</span><b class="mono" id="nextt">—</b><span id="nextl"></span></div>
       </div>
 
@@ -377,6 +385,21 @@ function renderMeChips(){
   });
 }
 
+/* 役割iの現在状態と残り時間。連続する同状態の行はまたいで合算する。
+   対応中の left は次の休憩開始まで（休憩がなければ本日終了まで） */
+function roleLeft(i,n){
+  const rows=day().rows;
+  const ix=rows.findIndex(r=>n>=toMin(r.s)&&n<toMin(r.e));
+  if(ix<0)return null;
+  const off=rows[ix].b.includes(i);
+  let j=ix;
+  while(j+1<rows.length&&toMin(rows[j+1].s)===toMin(rows[j].e)&&rows[j+1].b.includes(i)===off)j++;
+  if(off)return{off,left:toMin(rows[j].e)-n,until:rows[j].e};
+  let k=j+1;while(k<rows.length&&!rows[k].b.includes(i))k++;
+  const last=k>=rows.length;
+  return{off,left:(last?toMin(rows[j].e):toMin(rows[k].s))-n,until:last?null:rows[k].s};
+}
+
 /* 自分視点の残り時間。連続する同状態の行はまたいで合算する */
 function myStat(){
   const el=$('mestat');
@@ -474,6 +497,18 @@ function tick(){
   if(cur&&cur.n)$('nownote').textContent=cur.n;
   $('nextt').textContent=nx?nx.s:'—';
   $('nextl').textContent=nx?`${nx.t}（${CROWD[nx.c]}）まで あと${toMin(nx.s)-n}分`:'本日終了';
+  const who=$('nowwho');
+  if(cur){
+    const on=[],offs=[];
+    ROLE.forEach((_,i)=>{const st=roleLeft(i,n);if(!st)return;
+      const nm=esc(nameOf(i));
+      if(st.off)offs.push(`<b>${nm}</b> あと<span class="mono">${st.left}</span>分`);
+      else on.push(`<b>${nm}</b>${st.until?` あと<span class="mono">${st.left}</span>分`:'（休憩消化済）'}`);
+    });
+    who.hidden=false;
+    who.innerHTML=`<div class="wrow"><span class="wlab">ブース${on.length}名（休憩まで）</span><span>${on.join('・')}</span></div>`+
+      (offs.length?`<div class="wrow off"><span class="wlab">休憩中（戻りまで）</span><span>${offs.join('・')}</span></div>`:'');
+  }else who.hidden=true;
   myStat();
 
   const line=$('nowline'),run=$('run');
