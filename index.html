@@ -108,6 +108,7 @@
 .state{font-size:.75em;font-weight:600;padding:.2em .6em;border-radius:99px;white-space:nowrap}
 .state.on{background:#E8F0F9;color:var(--navy)}
 .state.off{background:#FFEDE5;color:#C43A08}
+.state.stby{background:var(--signal);color:#fff}
 .tot{font-size:.72em;color:var(--mute);margin-top:.5em;text-align:right}
 
 /* ── rundown ── */
@@ -415,8 +416,13 @@ function myStat(){
   const end=toMin(rows[j].e);
   if(off){
     const left=end-n;
-    if(left<=5)el.classList.add('warn');else el.classList.add('onbreak');
-    el.innerHTML=`<span class="tag">${esc(who)}｜休憩中</span>あと<b class="mono">${left}</b>分（${rows[j].e}までにブースへ）`;
+    if(left<=5){
+      el.classList.add('warn');
+      el.innerHTML=`<span class="tag">${esc(who)}｜スタンバイ</span>ブース脇へ移動。<b class="mono">${rows[j].e}</b>交代（波が早く来たら即入り）`;
+    }else{
+      el.classList.add('onbreak');
+      el.innerHTML=`<span class="tag">${esc(who)}｜休憩中</span>あと<b class="mono">${left-5}</b>分（${fmt(end-5)}からブース脇スタンバイ）`;
+    }
     return;
   }
   let k=j+1;
@@ -434,8 +440,12 @@ function myStat(){
 function updateStates(){
   const n=nowMin(),live=day().rows.find(r=>n>=toMin(r.s)&&n<toMin(r.e));
   document.querySelectorAll('.state').forEach(st=>{
-    const off=live&&live.b.includes(+st.dataset.role);
-    st.className='state '+(off?'off':'on');st.textContent=off?'休憩中':'在席';
+    const i=+st.dataset.role;
+    const off=live&&live.b.includes(i);
+    /* 休憩の最後5分はブース脇スタンバイ扱い（早終わりの波に即応するため） */
+    const stby=off&&roleLeft(i,n).left<=5;
+    st.className='state '+(stby?'stby':off?'off':'on');
+    st.textContent=stby?'スタンバイ':off?'休憩中':'在席';
   });
 }
 
@@ -499,15 +509,17 @@ function tick(){
   $('nextl').textContent=nx?`${nx.t}（${CROWD[nx.c]}）まで あと${toMin(nx.s)-n}分`:'本日終了';
   const who=$('nowwho');
   if(cur){
-    const on=[],offs=[];
+    const on=[],offs=[],stbys=[];
     ROLE.forEach((_,i)=>{const st=roleLeft(i,n);if(!st)return;
       const nm=esc(nameOf(i));
-      if(st.off)offs.push(`<b>${nm}</b> あと<span class="mono">${st.left}</span>分`);
+      if(st.off&&st.left<=5)stbys.push(`<b>${nm}</b>（${st.until}交代）`);
+      else if(st.off)offs.push(`<b>${nm}</b> あと<span class="mono">${st.left-5}</span>分`);
       else on.push(`<b>${nm}</b>${st.until?` あと<span class="mono">${st.left}</span>分`:'（休憩消化済）'}`);
     });
     who.hidden=false;
     who.innerHTML=`<div class="wrow"><span class="wlab">ブース${on.length}名（休憩まで）</span><span>${on.join('・')}</span></div>`+
-      (offs.length?`<div class="wrow off"><span class="wlab">休憩中（戻りまで）</span><span>${offs.join('・')}</span></div>`:'');
+      (stbys.length?`<div class="wrow off"><span class="wlab">ブース脇スタンバイ</span><span>${stbys.join('・')}</span></div>`:'')+
+      (offs.length?`<div class="wrow off"><span class="wlab">休憩中（脇集合まで）</span><span>${offs.join('・')}</span></div>`:'');
   }else who.hidden=true;
   myStat();
 
