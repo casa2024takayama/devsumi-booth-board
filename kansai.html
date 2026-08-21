@@ -150,7 +150,7 @@ body{
   <div class="eyebrow">X フォロワー 6000 チャレンジ</div>
   <div class="xrow"><b class="big mono" id="xnow">—</b><span class="xgoal" id="xgoalline"></span></div>
   <div id="xspark"></div>
-  <div class="xnote">🎉 <b>6000は15時台に達成</b>(予想15:30頃どおり)。18時着地予測は6,033前後。最後の勝負は<b>18:30クロージング明けの退場の波</b> — 全員在席＋1等2本残しで受け切る。</div>
+  <div class="xnote">🎉 <b>6000は15時台に達成</b>(予想15:30頃どおり)。目標は<b>本日+100＝6,034</b>。着地予測6,033のわずか1人上 — <b>18:30クロージング明けの退場の波</b>を全員在席＋1等2本残しで受け切って決める。</div>
   <div class="xupd mono" id="xupd"></div>
 </div>
 
@@ -210,7 +210,7 @@ const FOLLOWERS=[
  ['17:30',6028],
 ];
 const GOAL=6000;
-const PREVYEAR=6050; // 前年+116超えライン（9:00の5934起点）
+const TARGET=6034; // +100ライン（9:00の5934起点）
 /* 波連動モデルの予測経路（17時実測から再計算、18時以降は増加なし） */
 const PROJ=[
  ['18:00',6033],
@@ -300,9 +300,9 @@ function tick(){
 function renderX(){
   const last=FOLLOWERS[FOLLOWERS.length-1];
   $('xnow').textContent=last[1].toLocaleString();
-  $('xgoalline').innerHTML=last[1]>=GOAL
-    ?`🎉 6000達成！前年超え(${PREVYEAR.toLocaleString()})まで あと<b class="mono">${Math.max(0,PREVYEAR-last[1])}</b>人／18時着地予測 <b class="mono">${FINAL.toLocaleString()}</b>`
-    :`6000まで あと<b class="mono">${GOAL-last[1]}</b>人／18時着地予測 <b class="mono">${FINAL.toLocaleString()}</b>`;
+  $('xgoalline').innerHTML=last[1]>=TARGET
+    ?`🏆 本日+100達成！（${TARGET.toLocaleString()}超え）現在+<b class="mono">${last[1]-5934}</b>`
+    :`🎉 6000達成！+100ライン(${TARGET.toLocaleString()})まで あと<b class="mono">${TARGET-last[1]}</b>人／18時着地予測 <b class="mono">${FINAL.toLocaleString()}</b>`;
   $('xupd').textContent=last[0]+' 時点の実測';
 
   // sparkline: 9:00〜18:30 / 実測折れ線＋6000ライン＋予測経路（点線）
