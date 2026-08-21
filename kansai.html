@@ -1,0 +1,259 @@
+<title>デブサミ2026関西 波ボード</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap');
+
+:root{
+  --ink:#0D1520;
+  --paper:#E7EAEE;
+  --card:#FFFFFF;
+  --navy:#004BA0;
+  --signal:#FF4D12;
+  --mute:#8494A5;
+  --line:#C9D1DA;
+
+  --c-idle:#9FB0C0;
+  --c-quiet:#4F7CA8;
+  --c-busy:#E2762F;
+  --c-peak:#FF3D00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--paper)}
+body{
+  font-family:'IBM Plex Sans JP',system-ui,sans-serif;
+  background:var(--paper); color:var(--ink);
+  line-height:1.5; font-size:15px;
+  max-width:560px; margin:0 auto; min-height:100dvh;
+}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+/* ── sticky top: clock + now ── */
+.top{
+  position:sticky; top:0; z-index:5;
+  background:var(--navy); color:#fff;
+  padding:.6em 1em .7em;
+  box-shadow:0 2px 8px rgba(13,21,32,.25);
+}
+.evrow{display:flex; align-items:baseline; gap:.6em; margin-bottom:.35em}
+.evname{font-weight:700; font-size:.85em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.evdate{font-size:.72em; color:rgba(255,255,255,.7); margin-left:auto; white-space:nowrap}
+.toprow{display:flex; align-items:center; gap:1em}
+.clockbox{flex:0 0 auto}
+.live{display:flex; align-items:center; gap:.35em; font-size:.68em; letter-spacing:.08em; font-weight:600}
+.dot{width:.6em; height:.6em; border-radius:50%; background:var(--signal); animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.clock{font-size:2.1em; font-weight:600; letter-spacing:.02em; line-height:1.05}
+.nowstat{flex:1; min-width:0; text-align:right; line-height:1.25}
+.nowstat .tag{
+  display:inline-block; font-size:.7em; font-weight:600; letter-spacing:.06em;
+  padding:.12em .55em; border-radius:2px; background:rgba(255,255,255,.18); margin-bottom:.15em;
+}
+.nowstat b{display:block; font-size:1.65em; font-weight:700; letter-spacing:-.01em}
+.nowstat .sub{font-size:.75em; color:rgba(255,255,255,.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.nowstat[data-c="peak"] .tag{background:var(--c-peak)}
+.nowstat[data-c="busy"] .tag{background:var(--c-busy)}
+.nowstat[data-c="quiet"] .tag{background:var(--c-quiet)}
+.nowstat[data-c="idle"] .tag{background:var(--c-idle); color:var(--ink)}
+.nextrow{margin-top:.4em; padding-top:.4em; border-top:1px solid rgba(255,255,255,.2); font-size:.78em; color:rgba(255,255,255,.85); display:flex; gap:.5em; align-items:baseline}
+.nextrow .eyebrow{color:rgba(255,255,255,.55)}
+.nextrow b{font-weight:600}
+
+.eyebrow{font-size:.7em; letter-spacing:.14em; color:var(--mute); font-weight:600}
+
+/* ── note banner ── */
+.banner{
+  margin:.8em .9em 0; background:#FFF4EE; border-left:3px solid var(--signal);
+  padding:.5em .7em; font-size:.8em; border-radius:2px;
+}
+
+/* ── legend ── */
+.legend{display:flex; gap:.9em; padding:.7em 1em .3em; font-size:.72em; color:var(--mute); flex-wrap:wrap}
+.lg{display:flex; gap:.3em; align-items:center}
+.lg i{height:.85em; border-radius:1px; display:block}
+
+/* ── rundown ── */
+.run{padding:0 0 45vh; position:relative}
+.row{
+  display:grid; grid-template-columns:28px 5.4em 1fr; gap:.7em;
+  padding:.6em 1em .6em .6em; align-items:start;
+  border-bottom:1px solid #DCE2E8; position:relative;
+}
+.row.past{opacity:.4}
+.row.past .time{text-decoration:line-through}
+.row.live{background:var(--card); box-shadow:inset 0 0 0 1px var(--signal)}
+.ribbon{align-self:stretch; border-radius:1px; justify-self:center}
+.ribbon[data-c="idle"]{width:4px; background:var(--c-idle)}
+.ribbon[data-c="quiet"]{width:9px; background:var(--c-quiet)}
+.ribbon[data-c="busy"]{width:17px; background:var(--c-busy)}
+.ribbon[data-c="peak"]{width:26px; background:var(--c-peak)}
+.time{font-weight:500; letter-spacing:-.01em; font-size:.92em; padding-top:.1em}
+.dur{display:block; color:var(--mute); font-size:.78em}
+.title{font-weight:600}
+.row[data-c="peak"] .title{color:var(--c-peak)}
+.ctx{color:#5A6B7C; font-size:.85em}
+.note{font-size:.85em; color:#3C4A58; margin-top:.15em}
+.badge{
+  display:inline-block; font-size:.68em; font-weight:600; letter-spacing:.06em;
+  padding:.12em .5em; border-radius:2px; background:var(--navy); color:#fff;
+  margin-right:.4em; vertical-align:.12em;
+}
+.badge.own{background:var(--signal)}
+
+/* NOW line */
+#nowline{position:absolute; left:0; right:0; height:0; z-index:2; pointer-events:none}
+#nowline::before{content:""; position:absolute; left:0; right:0; top:-1px; height:2px; background:var(--signal)}
+#nowline::after{
+  content:attr(data-t); position:absolute; right:0; top:-.85em;
+  background:var(--signal); color:#fff; font-family:'IBM Plex Mono',monospace;
+  font-size:.7em; font-weight:600; padding:.15em .5em; letter-spacing:.05em;
+}
+.foot{padding:1em; font-size:.72em; color:var(--mute); text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+<div class="top">
+  <div class="evrow">
+    <span class="evname">デブサミ2026 KANSAI｜波ボード</span>
+    <span class="evdate mono">8/21(金) 梅田サウスホール</span>
+  </div>
+  <div class="toprow">
+    <div class="clockbox">
+      <div class="live"><span class="dot"></span><span>LIVE</span></div>
+      <div class="clock mono" id="clock">--:--</div>
+    </div>
+    <div class="nowstat" id="nowstat">
+      <span class="tag" id="nowtag">—</span>
+      <b id="nowcrowd">—</b>
+      <span class="sub" id="nowtitle"></span>
+    </div>
+  </div>
+  <div class="nextrow"><span class="eyebrow">つぎ</span><b class="mono" id="nextt">—</b><span id="nextl"></span></div>
+</div>
+
+<div class="banner">A・B会場タイムテーブル統合の予測（枠時刻は両会場共通）。<b>転換の波は表示より早く来る前提</b>で動く（Summerの実績どおり）。</div>
+
+<div class="legend">
+  <span class="lg"><i style="width:4px;background:var(--c-idle)"></i>最閑散</span>
+  <span class="lg"><i style="width:9px;background:var(--c-quiet)"></i>閑散</span>
+  <span class="lg"><i style="width:17px;background:var(--c-busy)"></i>混雑</span>
+  <span class="lg"><i style="width:26px;background:var(--c-peak)"></i>ピーク</span>
+</div>
+
+<div class="run" id="run">
+  <div id="rows"></div>
+  <div id="nowline" hidden></div>
+</div>
+
+<div class="foot">デブサミ2026関西 波ボード（B会場スケジュール準拠）</div>
+
+<script>
+const CROWD={idle:'最閑散',quiet:'閑散',busy:'混雑',peak:'ピーク'};
+const R=(s,e,t,c,x,n,badge)=>({s,e,t,c,x:x||'',n:n||'',badge:badge||''});
+
+const ROWS=[
+ R('09:30','10:00','開場〜基調講演前','busy','来場ラッシュ','最初の波。全員在席で立ち上がる'),
+ R('10:00','10:40','基調講演（A・B同時）','idle','A: とほほのWWW入門／B: KDDI AIエージェント','会場が吸い込む最閑散帯。交代休憩はここで'),
+ R('10:40','10:55','転換','busy','基調講演明け','終盤の抜け出し含め波が前倒しで来る'),
+ R('10:55','11:35','セッション枠','quiet','A: NEC（AIエージェント利用率）／B: 本田技研',''),
+ R('11:35','12:25','リフレッシュタイム（50分）','peak','ブーススタンプラリー誘導あり・抽選で豪華景品','本日最大のピーク。全員在席。ノベルティQRはここで攻める','ピーク'),
+ R('12:25','12:55','セッション枠（短枠30分）','quiet','A: Works Human Intelligence／B: mabl','昼明けの短枠'),
+ R('12:55','13:10','転換','busy','','昼帰りの人流と重なる'),
+ R('13:10','13:40','特別講演（A・B同時）','quiet','A: 大和ハウス／B: ソニックガーデン（サイン会あり）','終了後サイン会側に人が流れる点に注意'),
+ R('13:40','13:55','転換','busy','',''),
+ R('13:55','14:35','セッション枠','quiet','A: TRAILBLAZER／B: ファストリー（HTTP最前線）',''),
+ R('14:35','14:50','転換','busy','',''),
+ R('14:50','15:20','公募セッション枠','quiet','A: NRIネットコム／B: sumrie氏',''),
+ R('15:20','15:35','転換','busy','','この波のあと自社セッションへ送客の最終チャンス'),
+ R('15:35','16:05','B-7 自社セッション','quiet','高坂さん登壇（AI駆動開発の二面性を設計する）／A: BLUEISH（RAG実践知）','ブースは閑散だが応援・撮影で人を割きすぎない','自社'),
+ R('16:05','16:20','転換','peak','B-7終了直後・A会場もここでClosedへ','セッション聴講者がブースに流れる本命の波。全員在席','自社明け'),
+ R('16:20','16:50','B-8のみ稼働（A会場Closed）','busy','B: セールスフォース／A: 休憩スペース開放','A会場分の人が回遊。閑散に見えても拾い所'),
+ R('16:50','17:05','転換','busy','',''),
+ R('17:05','17:35','A-9のみ稼働（B会場Closed）','busy','A: ハイヤールー／B: 休憩スペース開放','B会場分の人が回遊する30分。拾い所'),
+ R('17:35','17:50','転換','busy','クロージング前',''),
+ R('17:50','18:30','クロージング講演（A・B同時）','quiet','A: 関西コミュニティLT／B: 関西CTOパネル','撤収準備はまだ始めない'),
+ R('18:30','19:00','終了〜最後の波','busy','','クロージング明けの最後の波。受け切ってから撤収'),
+];
+
+const $=id=>document.getElementById(id);
+const mins=t=>{const[a,b]=t.split(':').map(Number);return a*60+b};
+const esc=s=>s.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+function render(){
+  $('rows').innerHTML=ROWS.map((r,i)=>{
+    const d=mins(r.e)-mins(r.s);
+    const badge=r.badge?`<span class="badge${r.badge==='自社'||r.badge==='自社明け'?' own':''}">${esc(r.badge)}</span>`:'';
+    return `<div class="row" data-i="${i}" data-c="${r.c}">
+      <span class="ribbon" data-c="${r.c}"></span>
+      <span class="time mono">${r.s}<span class="dur">${d}分</span></span>
+      <span>
+        <span class="title">${badge}${esc(r.t)}</span>
+        ${r.x?`<div class="ctx">${esc(r.x)}</div>`:''}
+        ${r.n?`<div class="note">${esc(r.n)}</div>`:''}
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function nowStr(d){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+
+let scrolled=false;
+function tick(){
+  const d=new Date();
+  const t=nowStr(d), m=mins(t);
+  $('clock').textContent=t;
+
+  let cur=null, curIdx=-1, next=null;
+  ROWS.forEach((r,i)=>{
+    if(m>=mins(r.s)&&m<mins(r.e)&&!cur){cur=r;curIdx=i}
+    if(!next&&mins(r.s)>m)next=r;
+  });
+  if(cur&&!next&&curIdx<ROWS.length-1)next=ROWS[curIdx+1];
+
+  const st=$('nowstat');
+  if(cur){
+    st.dataset.c=cur.c;
+    $('nowtag').textContent='ただいまの混雑';
+    $('nowcrowd').textContent=CROWD[cur.c];
+    $('nowtitle').textContent=cur.t;
+  }else{
+    st.dataset.c='';
+    $('nowtag').textContent=m<mins(ROWS[0].s)?'開場前':'終了';
+    $('nowcrowd').textContent='時間外';
+    $('nowtitle').textContent='';
+  }
+  if(next){
+    $('nextt').textContent=next.s;
+    $('nextl').textContent=`${CROWD[next.c]}｜${next.t}`;
+  }else{
+    $('nextt').textContent='—';
+    $('nextl').textContent='本日終了。おつかれさまでした';
+  }
+
+  // 行の状態
+  document.querySelectorAll('.row').forEach(el=>{
+    const r=ROWS[+el.dataset.i];
+    el.classList.toggle('past',mins(r.e)<=m);
+    el.classList.toggle('live',r===cur);
+  });
+
+  // NOWライン
+  const line=$('nowline');
+  if(cur){
+    const el=document.querySelector(`.row[data-i="${curIdx}"]`);
+    const frac=(m-mins(cur.s))/(mins(cur.e)-mins(cur.s));
+    line.hidden=false;
+    line.style.top=(el.offsetTop+el.offsetHeight*frac)+'px';
+    line.dataset.t=t;
+    if(!scrolled){
+      scrolled=true;
+      setTimeout(()=>window.scrollTo({top:Math.max(0,el.offsetTop-160),behavior:'smooth'}),300);
+    }
+  }else{
+    line.hidden=true;
+  }
+}
+
+render();
+tick();
+setInterval(tick,15000);
+</script>
