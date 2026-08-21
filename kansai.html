@@ -148,9 +148,9 @@ body{
 
 <div class="xcard">
   <div class="eyebrow">X フォロワー 6000 チャレンジ</div>
-  <div class="xrow"><b class="big mono" id="xnow">—</b><span class="xgoal">6000まで あと<b class="mono" id="xleft">—</b>人／18時着地予測 <b class="mono" id="xfinal">—</b></span></div>
+  <div class="xrow"><b class="big mono" id="xnow">—</b><span class="xgoal" id="xgoalline"></span></div>
   <div id="xspark"></div>
-  <div class="xnote">波連動モデルの到達予想：<b>15:20–15:35の転換の波</b>（遅くとも16:20の自社明けピークまで）。18時以降は増加なしの前提で着地 6,015〜6,040。14:35・15:20の波で「あと○人」の声かけを。</div>
+  <div class="xnote">🎉 <b>6000は15時台に達成</b>（予想15:30頃どおり）。18時着地予測は6,036前後。前年超え（6,050）には17時台+28が必要 — Closed回遊帯とクロージング前の波で1人でも上積みを。</div>
   <div class="xupd mono" id="xupd"></div>
 </div>
 
@@ -205,17 +205,16 @@ const FOLLOWERS=[
  ['12:46',5979],
  ['13:00',5980],
  ['14:00',5990],
+ ['16:00',6003],
+ ['17:00',6022],
 ];
 const GOAL=6000;
-const FORECAST='15:30'; // 波連動モデルの到達予想
-/* 波連動モデルの予測経路（閑散≈4/h・混雑≈15/h・ピーク≈22/h、18時以降は増加なし） */
+const PREVYEAR=6050; // 前年+116超えライン（9:00の5934起点）
+/* 波連動モデルの予測経路（17時実測から再計算、18時以降は増加なし） */
 const PROJ=[
- ['15:30',6000],
- ['16:05',6003],
- ['16:20',6009],
- ['17:35',6028],
- ['18:00',6030],
- ['18:30',6030],
+ ['17:35',6031],
+ ['18:00',6036],
+ ['18:30',6036],
 ];
 const FINAL=PROJ[PROJ.length-1][1];
 
@@ -301,8 +300,9 @@ function tick(){
 function renderX(){
   const last=FOLLOWERS[FOLLOWERS.length-1];
   $('xnow').textContent=last[1].toLocaleString();
-  $('xleft').textContent=Math.max(0,GOAL-last[1]);
-  $('xfinal').textContent=FINAL.toLocaleString();
+  $('xgoalline').innerHTML=last[1]>=GOAL
+    ?`🎉 6000達成！前年超え(${PREVYEAR.toLocaleString()})まで あと<b class="mono">${Math.max(0,PREVYEAR-last[1])}</b>人／18時着地予測 <b class="mono">${FINAL.toLocaleString()}</b>`
+    :`6000まで あと<b class="mono">${GOAL-last[1]}</b>人／18時着地予測 <b class="mono">${FINAL.toLocaleString()}</b>`;
   $('xupd').textContent=last[0]+' 時点の実測';
 
   // sparkline: 9:00〜18:30 / 実測折れ線＋6000ライン＋予測経路（点線）
@@ -316,7 +316,6 @@ function renderX(){
   const pts=FOLLOWERS.map(f=>[X(mins(f[0])),Y(f[1])]);
   const lp=pts[pts.length-1];
   const gy=Y(GOAL).toFixed(1);
-  const fx=X(mins(FORECAST)).toFixed(1);
   const proj=[[last[0],last[1]],...PROJ];
   const ep=[X(mins('18:00')),Y(FINAL)];
   $('xspark').innerHTML=
@@ -324,7 +323,6 @@ function renderX(){
      <line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#FF4D12" stroke-width="1" stroke-dasharray="3 3"/>
      <text x="${W-PR+3}" y="${(+gy+3.5).toFixed(1)}" font-size="9" fill="#FF4D12" font-weight="600">6000</text>
      <polyline points="${P(proj)}" fill="none" stroke="#8494A5" stroke-width="1.2" stroke-dasharray="2 3"/>
-     <text x="${fx}" y="${(+gy+11).toFixed(1)}" font-size="8.5" fill="#8494A5" text-anchor="middle">予想 ${FORECAST}頃</text>
      <text x="${ep[0].toFixed(1)}" y="${(ep[1]-5).toFixed(1)}" font-size="8.5" fill="#8494A5" text-anchor="end">18時予測 ${FINAL.toLocaleString()}</text>
      <circle cx="${ep[0].toFixed(1)}" cy="${ep[1].toFixed(1)}" r="2.4" fill="none" stroke="#8494A5" stroke-width="1.2"/>
      <polyline points="${P(FOLLOWERS)}" fill="none" stroke="#004BA0" stroke-width="2"/>
